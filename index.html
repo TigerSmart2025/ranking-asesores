@@ -8,8 +8,8 @@
         :root {
             --primary-color: #003366; /* azul marino */
             --secondary-color: #FFA500; /* naranja */
-            --background-color: #F5F5F5;
-            --table-header-bg: var(--primary-color);
+----background-color: #E0F7FA;
+--table-header-bg: var(--primary-color);
             --table-header-color: #ffffff;
         }
 
@@ -107,7 +107,8 @@
         .form-container {
             margin-top: 40px;
             padding: 20px;
-            background-color: #ffffff;
+                            display: none;
+                        background-color: #ffffff;
             border: 1px solid #ddd;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -340,8 +341,31 @@
         }
 
         // Inicializar datos y renderizar al cargar la página
-        loadAsesoresData();
-        generarPiramide();
+        ////loadAsesoresData();
+        //generarPiramide();
+       
+    (async function() {
+        try {
+            const res = await fetch('data.json');
+            const data = await res.json();
+            asesoresData = Array.isArray(data) ? data : [];
+            // Calcular la fecha más reciente
+            let maxFecha = '';
+            asesoresData.forEach(item => {
+                if (!maxFecha || new Date(item.fecha) > new Date(maxFecha)) {
+                    maxFecha = item.fecha;
+                }
+            });
+            // Mostrar la fecha de última actualización
+            const fechaEl = document.getElementById('fecha-actual');
+            fechaEl.textContent = maxFecha ? formatFecha(maxFecha) : '';
+            generarPiramide();
+        } catch (err) {
+            console.error(err);
+        }
+    })();
+    
+
     </script>
 </body>
 </html>
