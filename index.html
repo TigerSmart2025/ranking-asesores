@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranking de Ventas Mensuales de Asesores</title>
+    <style>
+        :root {
+            --primary-color: #003366; /* azul marino */
+            --secondary-color: #FFA500; /* naranja */
+            --background-color: #F5F5F5;
+            --table-header-bg: var(--primary-color);
+            --table-header-color: #ffffff;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        .content {
+            max-width: 1000px;
+            margin: 30px auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .update-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .update-info span {
+            color: var(--primary-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        /* Estilos para la pirámide */
+        .piramide {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .fila-piramide {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-asesor {
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .card-asesor h3 {
+            margin: 20px 0 10px 0;
+            color: var(--primary-color);
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: var(--secondary-color);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        /* Estilos para el formulario */
+        .form-container {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-container h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        .form-group input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        .form-container button {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .form-container button:hover {
+            background-color: #00224d;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Ranking de Ventas Mensuales de Asesores</h1>
+    </header>
+    <div class="content">
+        <div class="update-info">
+            <span>Última actualización:</span>
+            <span id="fecha-actual"></span>
+        </div>
+        <!-- Contenedor para la pirámide de asesores -->
+        <div id="piramide" class="piramide">
+            <!-- Las tarjetas de asesores se generarán dinámicamente en JavaScript -->
+        </div>
+
+        <!-- Formulario para añadir o actualizar asesores -->
+        <div class="form-container">
+            <h2>Agregar o Actualizar Asesor</h2>
+            <form id="asesor-form" onsubmit="manejarFormulario(event)">
+                <div class="form-group">
+                    <label for="nombre-input">Nombre Completo:</label>
+                    <input type="text" id="nombre-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="ventas-input">Número de Ventas:</label>
+                    <input type="number" id="ventas-input" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="fecha-input">Fecha de Actualización:</label>
+                    <input type="date" id="fecha-input" required>
+                </div>
+                <button type="submit">Guardar Asesor</button>
+            </form>
+        </div>
+    </div>
+    <script>
+        // Gestionar datos de asesores y persistir en localStorage
+        let asesoresData = [];
+
+        // Cargar datos desde localStorage o establecer datos de muestra
+        function loadAsesoresData() {
+            const stored = localStorage.getItem('asesoresData');
+            if (stored) {
+                try {
+                    asesoresData = JSON.parse(stored);
+                } catch (e) {
+                    asesoresData = [];
+                }
+            }
+            if (!asesoresData || asesoresData.length === 0) {
+                // Datos de muestra si no hay datos guardados
+                asesoresData = [
+                    { nombre: "María Fernanda Salazar", ventas: 22, fecha: "2025-08-10" },
+                    { nombre: "Juan Carlos López", ventas: 18, fecha: "2025-08-09" },
+                    { nombre: "Pedro Alonso", ventas: 15, fecha: "2025-08-11" },
+                    { nombre: "Ana Isabel Torres", ventas: 12, fecha: "2025-08-08" },
+                    { nombre: "Laura Céspedes", ventas: 8, fecha: "2025-08-06" }
+                ];
+            }
+        }
+
+        // Guardar datos en localStorage
+        function saveAsesoresData() {
+            localStorage.setItem('asesoresData', JSON.stringify(asesoresData));
+        }
+
+        // Función para formatear la fecha en español (por ejemplo, 11 de agosto de 2025)
+        function formatFecha(fechaStr) {
+            const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
+            const fecha = new Date(fechaStr);
+            return fecha.toLocaleDateString('es-PE', opciones);
+        }
+
+        // Calcular la fecha actual para mostrar en la parte superior
+        const fechaHoy = new Date();
+        const fechaActualStr = fechaHoy.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
+        document.getElementById('fecha-actual').textContent = fechaActualStr;
+
+        // Generar pirámide de asesores de forma dinámica
+        function generarPiramide() {
+            // Ordenar los asesores por número de ventas descendente
+            asesoresData.sort((a, b) => b.ventas - a.ventas);
+            const contenedor = document.getElementById('piramide');
+            // Limpiar cualquier contenido anterior
+            contenedor.innerHTML = '';
+
+            const total = asesoresData.length;
+            // Definir número de asesores por fila: 1 en la primera, el resto distribuido uniformemente
+            const firstRow = 1;
+            const remaining = total - firstRow;
+            const secondRow = Math.ceil(remaining / 2);
+            const thirdRow = remaining - secondRow;
+            const filas = [];
+            // Sumar rangos
+            filas.push(asesoresData.slice(0, firstRow));
+            filas.push(asesoresData.slice(firstRow, firstRow + secondRow));
+            filas.push(asesoresData.slice(firstRow + secondRow));
+
+            filas.forEach((fila, rowIndex) => {
+                if (fila.length === 0) return;
+                const row = document.createElement('div');
+                row.className = 'fila-piramide';
+                fila.forEach((asesor) => {
+                    const rank = asesoresData.indexOf(asesor) + 1;
+                    // Crear tarjeta
+                    const card = document.createElement('div');
+                    card.className = 'card-asesor';
+                    // Ajustar tamaño según la fila
+                    if (rowIndex === 0) {
+                        card.style.width = '260px';
+                    } else if (rowIndex === 1) {
+                        card.style.width = '200px';
+                    } else {
+                        card.style.width = '180px';
+                    }
+
+                    // Distintivos de clasificación
+                    const badge = document.createElement('div');
+                    badge.className = 'badge';
+                    // Asignar icono y texto según la posición
+                    let icono = '';
+                    let texto = '';
+                    if (rank === 1) {
+                        icono = '👑';
+                        texto = 'Top 1';
+                    } else if (rank === 2) {
+                        icono = '⭐';
+                        texto = 'Top 2';
+                    } else if (rank === 3) {
+                        icono = '🏅';
+                        texto = 'Top 3';
+                    } else {
+                        texto = `#${rank}`;
+                    }
+                    badge.textContent = icono ? `${icono} ${texto}` : texto;
+                    card.appendChild(badge);
+
+                    // Nombre
+                    const nombreEl = document.createElement('h3');
+                    nombreEl.textContent = asesor.nombre;
+                    nombreEl.style.fontSize = rowIndex === 0 ? '1.2rem' : '1rem';
+                    card.appendChild(nombreEl);
+
+                    // Ventas
+                    const ventasEl = document.createElement('p');
+                    ventasEl.innerHTML = `<strong>Ventas:</strong> ${asesor.ventas}`;
+                    card.appendChild(ventasEl);
+
+                    // Fecha de actualización
+                    const fechaEl = document.createElement('p');
+                    fechaEl.innerHTML = `<strong>Actualizado:</strong> ${formatFecha(asesor.fecha)}`;
+                    card.appendChild(fechaEl);
+
+                    row.appendChild(card);
+                });
+                contenedor.appendChild(row);
+            });
+        }
+
+        // Manejar envío del formulario para agregar o actualizar un asesor
+        function manejarFormulario(event) {
+            event.preventDefault();
+            const nombreInput = document.getElementById('nombre-input');
+            const ventasInput = document.getElementById('ventas-input');
+            const fechaInput = document.getElementById('fecha-input');
+
+            const nombre = nombreInput.value.trim();
+            const ventas = parseInt(ventasInput.value, 10);
+            const fecha = fechaInput.value;
+
+            if (!nombre || isNaN(ventas) || !fecha) {
+                alert('Por favor, complete todos los campos');
+                return;
+            }
+
+            // Buscar si el asesor ya existe (comparar nombres sin distinción de mayúsculas/minúsculas)
+            const idx = asesoresData.findIndex(a => a.nombre.toLowerCase() === nombre.toLowerCase());
+            if (idx >= 0) {
+                // Actualizar datos existentes
+                asesoresData[idx].ventas = ventas;
+                asesoresData[idx].fecha = fecha;
+            } else {
+                // Agregar nuevo asesor
+                asesoresData.push({ nombre, ventas, fecha });
+            }
+            // Guardar cambios y actualizar pirámide
+            saveAsesoresData();
+            generarPiramide();
+            // Limpiar campos del formulario
+            nombreInput.value = '';
+            ventasInput.value = '';
+            fechaInput.value = '';
+        }
+
+        // Inicializar datos y renderizar al cargar la página
+        loadAsesoresData();
+        generarPiramide();
+    </script>
+</body>
+</html>
